@@ -14,22 +14,25 @@ static ngx_inline void *ngx_palloc_small(ngx_pool_t *pool, size_t size,
 static void *ngx_palloc_block(ngx_pool_t *pool, size_t size);
 static void *ngx_palloc_large(ngx_pool_t *pool, size_t size);
 
-
+// 创建内存池
 ngx_pool_t *
 ngx_create_pool(size_t size, ngx_log_t *log)
 {
     ngx_pool_t  *p;
 
+    // 内存对齐操作
     p = ngx_memalign(NGX_POOL_ALIGNMENT, size, log);
     if (p == NULL) {
         return NULL;
     }
 
+    // ngx_pool_data_t 赋值
     p->d.last = (u_char *) p + sizeof(ngx_pool_t);
     p->d.end = (u_char *) p + size;
     p->d.next = NULL;
     p->d.failed = 0;
 
+    // 去除之后，ngx_pool_data_t最大能存的数据
     size = size - sizeof(ngx_pool_t);
     p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL;
 
@@ -128,6 +131,7 @@ ngx_palloc(ngx_pool_t *pool, size_t size)
     }
 #endif
 
+    // 大块
     return ngx_palloc_large(pool, size);
 }
 
@@ -170,6 +174,7 @@ ngx_palloc_small(ngx_pool_t *pool, size_t size, ngx_uint_t align)
 
     } while (p);
 
+    // 如果遍历整个内存池都没有找到满足申请大小的内存，就申请一个新的内存池，挂在内存池的最后面
     return ngx_palloc_block(pool, size);
 }
 

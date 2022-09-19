@@ -128,7 +128,8 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
-    ngx_start_worker_processes(cycle, ccf->worker_processes,
+    // 开始 worker_processes
+    ngx_start_worker_processes(cycle,ccf->worker_processes, // 进程数量
                                NGX_PROCESS_RESPAWN);
     ngx_start_cache_manager_processes(cycle, 0);
 
@@ -304,9 +305,11 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
         }
     }
 
+    // 自循环
     for ( ;; ) {
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
 
+        // 时间定时
         ngx_process_events_and_timers(cycle);
 
         if (ngx_terminate || ngx_quit) {
@@ -342,6 +345,7 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
 }
 
 
+// 开始处理work_processes
 static void
 ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 {
@@ -354,10 +358,12 @@ ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 
     ch.command = NGX_CMD_OPEN_CHANNEL;
 
+
+    // 循环创建进程，
+    // nginx使用多线程，而不是多进程？
     for (i = 0; i < n; i++) {
 
-        ngx_spawn_process(cycle, ngx_worker_process_cycle,
-                          (void *) (intptr_t) i, "worker process", type);
+        ngx_spawn_process(cycle, ngx_worker_process_cycle,(void *) (intptr_t) i, "worker process", type);
 
         ch.pid = ngx_processes[ngx_process_slot].pid;
         ch.slot = ngx_process_slot;
@@ -736,6 +742,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
     ngx_setproctitle("worker process");
 
+    // 自循环
     for ( ;; ) {
 
         if (ngx_exiting) {

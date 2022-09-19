@@ -31,6 +31,7 @@ typedef void (*ngx_pool_cleanup_pt)(void *data);
 
 typedef struct ngx_pool_cleanup_s  ngx_pool_cleanup_t;
 
+// 自定义清理回调的数据结构
 struct ngx_pool_cleanup_s {
     ngx_pool_cleanup_pt   handler;
     void                 *data;
@@ -40,25 +41,46 @@ struct ngx_pool_cleanup_s {
 
 typedef struct ngx_pool_large_s  ngx_pool_large_t;
 
+
+
+// 大数据块结构
 struct ngx_pool_large_s {
     ngx_pool_large_t     *next;
     void                 *alloc;
 };
 
-
+// 数据区域结构
 typedef struct {
+
+    // 内存池中未使用内存的开始节点地址
     u_char               *last;
+
+    // 内存池的结束地址
     u_char               *end;
+
+    // 指向下一个内存池
     ngx_pool_t           *next;
     ngx_uint_t            failed;
 } ngx_pool_data_t;
 
+/**
+ * 1、虽然系统自带的ptmalloc内存分配管理器，也有自己的内存优化管理方案（申请内存块以及将内存交还给系统都有自己的优化方案，具体可以研究一下ptmalloc的源码），但是直接使用malloc/alloc/free，仍然会导致内存分配的性能比较低。
+   2、频繁使用这些函数分配和释放内存，会导致内存碎片，不容易让系统直接回收内存。典型的例子就是大并发频繁分配和回收内存，会导致进程的内存产生碎片，并且不会立马被系统回收。
+   3、容易产生内存泄露。
+ */
 
+// Nginx 内存池数据结构
 struct ngx_pool_s {
+
+//    数据库的结构
     ngx_pool_data_t       d;
+
+    // 最大每次分配内存
     size_t                max;
     ngx_pool_t           *current;
     ngx_chain_t          *chain;
+
+    // 指向大内存数据块链表结构
     ngx_pool_large_t     *large;
     ngx_pool_cleanup_t   *cleanup;
     ngx_log_t            *log;
@@ -70,6 +92,7 @@ typedef struct {
     u_char               *name;
     ngx_log_t            *log;
 } ngx_pool_cleanup_file_t;
+
 
 
 ngx_pool_t *ngx_create_pool(size_t size, ngx_log_t *log);

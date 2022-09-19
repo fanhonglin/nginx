@@ -79,7 +79,7 @@ static ngx_core_module_t  ngx_thread_pool_module_ctx = {
     ngx_thread_pool_init_conf
 };
 
-
+// nginx线程池
 ngx_module_t  ngx_thread_pool_module = {
     NGX_MODULE_V1,
     &ngx_thread_pool_module_ctx,           /* module context */
@@ -154,6 +154,8 @@ ngx_thread_pool_init(ngx_thread_pool_t *tp, ngx_log_t *log, ngx_pool_t *pool)
 #endif
 
     for (n = 0; n < tp->threads; n++) {
+
+        // ngx_thread_pool_cycle， 循环遍历
         err = pthread_create(&tid, &attr, ngx_thread_pool_cycle, tp);
         if (err) {
             ngx_log_error(NGX_LOG_ALERT, log, err,
@@ -227,6 +229,7 @@ ngx_thread_task_alloc(ngx_pool_t *pool, size_t size)
 }
 
 
+// 队列当中加入任务
 ngx_int_t
 ngx_thread_task_post(ngx_thread_pool_t *tp, ngx_thread_task_t *task)
 {
@@ -236,6 +239,7 @@ ngx_thread_task_post(ngx_thread_pool_t *tp, ngx_thread_task_t *task)
         return NGX_ERROR;
     }
 
+    // 加锁
     if (ngx_thread_mutex_lock(&tp->mtx, tp->log) != NGX_OK) {
         return NGX_ERROR;
     }
@@ -254,12 +258,15 @@ ngx_thread_task_post(ngx_thread_pool_t *tp, ngx_thread_task_t *task)
     task->id = ngx_thread_pool_task_id++;
     task->next = NULL;
 
+    // 条件等待
     if (ngx_thread_cond_signal(&tp->cond, tp->log) != NGX_OK) {
         (void) ngx_thread_mutex_unlock(&tp->mtx, tp->log);
         return NGX_ERROR;
     }
 
     *tp->queue.last = task;
+
+    // 加入一个task
     tp->queue.last = &task->next;
 
     tp->waiting++;
@@ -274,6 +281,7 @@ ngx_thread_task_post(ngx_thread_pool_t *tp, ngx_thread_task_t *task)
 }
 
 
+// 循环，判断队列当中是否有任务
 static void *
 ngx_thread_pool_cycle(void *data)
 {
@@ -303,7 +311,9 @@ ngx_thread_pool_cycle(void *data)
         return NULL;
     }
 
+    // 不断判断
     for ( ;; ) {
+
         if (ngx_thread_mutex_lock(&tp->mtx, tp->log) != NGX_OK) {
             return NULL;
         }
@@ -311,7 +321,10 @@ ngx_thread_pool_cycle(void *data)
         /* the number may become negative */
         tp->waiting--;
 
+        // 判断队列第一个是否为空
         while (tp->queue.first == NULL) {
+
+            // 条件不满足，就一直挂起
             if (ngx_thread_cond_wait(&tp->cond, &tp->mtx, tp->log)
                 != NGX_OK)
             {
@@ -579,6 +592,7 @@ ngx_thread_pool_get(ngx_cycle_t *cycle, ngx_str_t *name)
 }
 
 
+// 初始化线程池
 static ngx_int_t
 ngx_thread_pool_init_worker(ngx_cycle_t *cycle)
 {

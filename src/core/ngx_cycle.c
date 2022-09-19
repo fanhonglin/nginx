@@ -43,7 +43,10 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_uint_t           i, n;
     ngx_log_t           *log;
     ngx_time_t          *tp;
+
+    // 结构体nginx_conf_t
     ngx_conf_t           conf;
+
     ngx_pool_t          *pool;
     ngx_cycle_t         *cycle, **old;
     ngx_shm_zone_t      *shm_zone, *oshm_zone;
@@ -54,24 +57,31 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_core_module_t   *module;
     char                 hostname[NGX_MAXHOSTNAMELEN];
 
+
+    // 初始化时区
     ngx_timezone_update();
 
     /* force localtime update with a new timezone */
 
+    // 获取时间缓存当中的时间
     tp = ngx_timeofday();
     tp->sec = 0;
 
+    // 更新缓存时间
     ngx_time_update();
 
 
     log = old_cycle->log;
 
+    // 建立新的内存池
     pool = ngx_create_pool(NGX_CYCLE_POOL_SIZE, log);
     if (pool == NULL) {
         return NULL;
     }
     pool->log = log;
 
+
+    // 为内存池分片空间
     cycle = ngx_pcalloc(pool, sizeof(ngx_cycle_t));
     if (cycle == NULL) {
         ngx_destroy_pool(pool);
@@ -186,6 +196,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_queue_init(&cycle->reusable_connections_queue);
 
 
+    // conf_ctx
     cycle->conf_ctx = ngx_pcalloc(pool, ngx_max_module * sizeof(void *));
     if (cycle->conf_ctx == NULL) {
         ngx_destroy_pool(pool);
@@ -219,7 +230,10 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
 
 
+    // 解析main配置,例如work_processes、events/http，只能配置文件进行配置，不能在任何配置块中配置
     for (i = 0; cycle->modules[i]; i++) {
+
+        // 如果不等于非核心模块，继续
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
         }
@@ -266,6 +280,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
 
+
+    // 参数解析
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -1115,6 +1131,7 @@ ngx_signal_process(ngx_cycle_t *cycle, char *sig)
         return 1;
     }
 
+    // 处理信号
     return ngx_os_signal_process(cycle, sig, pid);
 
 }

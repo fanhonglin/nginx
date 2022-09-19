@@ -117,6 +117,7 @@ ngx_module_t  ngx_events_module = {
 static ngx_str_t  event_core_name = ngx_string("event_core");
 
 
+// command
 static ngx_command_t  ngx_event_core_commands[] = {
 
     { ngx_string("worker_connections"),
@@ -215,11 +216,15 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 #endif
     }
 
+
+    // 惊群
     if (ngx_use_accept_mutex) {
         if (ngx_accept_disabled > 0) {
             ngx_accept_disabled--;
 
         } else {
+
+            // 获取锁
             if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {
                 return;
             }
@@ -946,6 +951,7 @@ ngx_send_lowat(ngx_connection_t *c, size_t lowat)
 }
 
 
+// 解析events配置块
 static char *
 ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {

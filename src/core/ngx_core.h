@@ -19,6 +19,8 @@ typedef struct ngx_pool_s            ngx_pool_t;
 typedef struct ngx_chain_s           ngx_chain_t;
 typedef struct ngx_log_s             ngx_log_t;
 typedef struct ngx_open_file_s       ngx_open_file_t;
+
+// nginx_command_t
 typedef struct ngx_command_s         ngx_command_t;
 typedef struct ngx_file_s            ngx_file_t;
 typedef struct ngx_event_s           ngx_event_t;

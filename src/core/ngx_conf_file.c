@@ -90,6 +90,7 @@ ngx_conf_param(ngx_conf_t *cf)
     cf->conf_file = &conf_file;
     cf->conf_file->buffer = &b;
 
+    // 配置解析主函数
     rv = ngx_conf_parse(cf, NULL);
 
     cf->conf_file = NULL;
@@ -173,6 +174,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
     prev = NULL;
 #endif
 
+    // 如果文件不为空
     if (filename) {
 
         /* open configuration file */
@@ -239,7 +241,10 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
     }
 
 
+    // 依次读出指令
     for ( ;; ) {
+
+        // 将配置文件中当前的一条配置指令读取到内存中，判断配置语法是否使用正确
         rc = ngx_conf_read_token(cf);
 
         /*
@@ -256,6 +261,8 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
             goto done;
         }
 
+
+        // }
         if (rc == NGX_CONF_BLOCK_DONE) {
 
             if (type != parse_block) {
@@ -265,6 +272,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 
             goto done;
         }
+
 
         if (rc == NGX_CONF_FILE_DONE) {
 
@@ -277,6 +285,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
             goto done;
         }
 
+        // {
         if (rc == NGX_CONF_BLOCK_START) {
 
             if (type == parse_param) {
@@ -316,6 +325,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         }
 
 
+        // 处理函数ngx_conf_handler,
         rc = ngx_conf_handler(cf, rc);
 
         if (rc == NGX_ERROR) {
@@ -365,8 +375,10 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
 
     found = 0;
 
+    // 解析配置指令，NGX_CONF_MODULE，
     for (i = 0; cf->cycle->modules[i]; i++) {
 
+        // 获取到指令
         cmd = cf->cycle->modules[i]->commands;
         if (cmd == NULL) {
             continue;
@@ -378,6 +390,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                 continue;
             }
 
+            // 查找当前解析到的指令
             if (ngx_strcmp(name->data, cmd->name.data) != 0) {
                 continue;
             }

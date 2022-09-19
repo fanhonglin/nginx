@@ -73,6 +73,7 @@ ngx_time_init(void)
 
     ngx_cached_time = &cached_time[0];
 
+    // 更新时间
     ngx_time_update();
 }
 

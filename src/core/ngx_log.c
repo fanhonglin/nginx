@@ -31,6 +31,7 @@ typedef struct {
 #endif
 
 
+// 日志模块
 static ngx_command_t  ngx_errlog_commands[] = {
 
     { ngx_string("error_log"),
@@ -321,6 +322,8 @@ ngx_log_init(u_char *prefix)
     size_t   nlen, plen;
 
     ngx_log.file = &ngx_log_file;
+
+    // 日志默认级别
     ngx_log.log_level = NGX_LOG_NOTICE;
 
     name = (u_char *) NGX_ERROR_LOG_PATH;
@@ -375,6 +378,7 @@ ngx_log_init(u_char *prefix)
         }
     }
 
+    // 打开创建日志文件
     ngx_log_file.fd = ngx_open_file(name, NGX_FILE_APPEND,
                                     NGX_FILE_CREATE_OR_OPEN,
                                     NGX_FILE_DEFAULT_ACCESS);
