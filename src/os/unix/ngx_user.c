@@ -50,19 +50,19 @@ ngx_libc_crypt(ngx_pool_t *pool, u_char *key, u_char *salt, u_char **encrypted)
     size_t      len;
     ngx_err_t   err;
 
-    value = crypt((char *) key, (char *) salt);
-
-    if (value) {
-        len = ngx_strlen(value) + 1;
-
-        *encrypted = ngx_pnalloc(pool, len);
-        if (*encrypted == NULL) {
-            return NGX_ERROR;
-        }
-
-        ngx_memcpy(*encrypted, value, len);
-        return NGX_OK;
-    }
+//    value = crypt((char *) key, (char *) salt);
+//
+//    if (value) {
+//        len = ngx_strlen(value) + 1;
+//
+//        *encrypted = ngx_pnalloc(pool, len);
+//        if (*encrypted == NULL) {
+//            return NGX_ERROR;
+//        }
+//
+//        ngx_memcpy(*encrypted, value, len);
+//        return NGX_OK;
+//    }
 
     err = ngx_errno;
 

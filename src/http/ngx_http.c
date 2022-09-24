@@ -11,131 +11,152 @@
 
 
 static char *ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+
 static ngx_int_t ngx_http_init_phases(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf);
+                                      ngx_http_core_main_conf_t *cmcf);
+
 static ngx_int_t ngx_http_init_headers_in_hash(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf);
+                                               ngx_http_core_main_conf_t *cmcf);
+
 static ngx_int_t ngx_http_init_phase_handlers(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf);
+                                              ngx_http_core_main_conf_t *cmcf);
 
 static ngx_int_t ngx_http_add_addresses(ngx_conf_t *cf,
-    ngx_http_core_srv_conf_t *cscf, ngx_http_conf_port_t *port,
-    ngx_http_listen_opt_t *lsopt);
+                                        ngx_http_core_srv_conf_t *cscf, ngx_http_conf_port_t *port,
+                                        ngx_http_listen_opt_t *lsopt);
+
 static ngx_int_t ngx_http_add_address(ngx_conf_t *cf,
-    ngx_http_core_srv_conf_t *cscf, ngx_http_conf_port_t *port,
-    ngx_http_listen_opt_t *lsopt);
+                                      ngx_http_core_srv_conf_t *cscf, ngx_http_conf_port_t *port,
+                                      ngx_http_listen_opt_t *lsopt);
+
 static ngx_int_t ngx_http_add_server(ngx_conf_t *cf,
-    ngx_http_core_srv_conf_t *cscf, ngx_http_conf_addr_t *addr);
+                                     ngx_http_core_srv_conf_t *cscf, ngx_http_conf_addr_t *addr);
 
 static char *ngx_http_merge_servers(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf, ngx_http_module_t *module,
-    ngx_uint_t ctx_index);
+                                    ngx_http_core_main_conf_t *cmcf, ngx_http_module_t *module,
+                                    ngx_uint_t ctx_index);
+
 static char *ngx_http_merge_locations(ngx_conf_t *cf,
-    ngx_queue_t *locations, void **loc_conf, ngx_http_module_t *module,
-    ngx_uint_t ctx_index);
+                                      ngx_queue_t *locations, void **loc_conf, ngx_http_module_t *module,
+                                      ngx_uint_t ctx_index);
+
 static ngx_int_t ngx_http_init_locations(ngx_conf_t *cf,
-    ngx_http_core_srv_conf_t *cscf, ngx_http_core_loc_conf_t *pclcf);
+                                         ngx_http_core_srv_conf_t *cscf, ngx_http_core_loc_conf_t *pclcf);
+
 static ngx_int_t ngx_http_init_static_location_trees(ngx_conf_t *cf,
-    ngx_http_core_loc_conf_t *pclcf);
+                                                     ngx_http_core_loc_conf_t *pclcf);
+
 static ngx_int_t ngx_http_cmp_locations(const ngx_queue_t *one,
-    const ngx_queue_t *two);
+                                        const ngx_queue_t *two);
+
 static ngx_int_t ngx_http_join_exact_locations(ngx_conf_t *cf,
-    ngx_queue_t *locations);
+                                               ngx_queue_t *locations);
+
 static void ngx_http_create_locations_list(ngx_queue_t *locations,
-    ngx_queue_t *q);
+                                           ngx_queue_t *q);
+
 static ngx_http_location_tree_node_t *
-    ngx_http_create_locations_tree(ngx_conf_t *cf, ngx_queue_t *locations,
-    size_t prefix);
+ngx_http_create_locations_tree(ngx_conf_t *cf, ngx_queue_t *locations,
+                               size_t prefix);
 
 static ngx_int_t ngx_http_optimize_servers(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf, ngx_array_t *ports);
+                                           ngx_http_core_main_conf_t *cmcf, ngx_array_t *ports);
+
 static ngx_int_t ngx_http_server_names(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf, ngx_http_conf_addr_t *addr);
+                                       ngx_http_core_main_conf_t *cmcf, ngx_http_conf_addr_t *addr);
+
 static ngx_int_t ngx_http_cmp_conf_addrs(const void *one, const void *two);
+
 static int ngx_libc_cdecl ngx_http_cmp_dns_wildcards(const void *one,
-    const void *two);
+                                                     const void *two);
 
 static ngx_int_t ngx_http_init_listening(ngx_conf_t *cf,
-    ngx_http_conf_port_t *port);
+                                         ngx_http_conf_port_t *port);
+
 static ngx_listening_t *ngx_http_add_listening(ngx_conf_t *cf,
-    ngx_http_conf_addr_t *addr);
+                                               ngx_http_conf_addr_t *addr);
+
 static ngx_int_t ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport,
-    ngx_http_conf_addr_t *addr);
+                                    ngx_http_conf_addr_t *addr);
+
 #if (NGX_HAVE_INET6)
 static ngx_int_t ngx_http_add_addrs6(ngx_conf_t *cf, ngx_http_port_t *hport,
     ngx_http_conf_addr_t *addr);
 #endif
 
-ngx_uint_t   ngx_http_max_module;
+ngx_uint_t ngx_http_max_module;
 
 
-ngx_http_output_header_filter_pt  ngx_http_top_header_filter;
-ngx_http_output_body_filter_pt    ngx_http_top_body_filter;
-ngx_http_request_body_filter_pt   ngx_http_top_request_body_filter;
+ngx_http_output_header_filter_pt ngx_http_top_header_filter;
+ngx_http_output_body_filter_pt ngx_http_top_body_filter;
+ngx_http_request_body_filter_pt ngx_http_top_request_body_filter;
 
 
-ngx_str_t  ngx_http_html_default_types[] = {
-    ngx_string("text/html"),
-    ngx_null_string
+ngx_str_t ngx_http_html_default_types[] = {
+        ngx_string("text/html"),
+        ngx_null_string
 };
 
 
-// http指令定义
-static ngx_command_t  ngx_http_commands[] = {
+// http指令定义 http{ ... }
+// ngx_http_block:该方法就是回调函数
+// 在核心模块初始化的时候，会调用ngx_http_commands命令集中的回调函数，逐个解析核心模块的配置信息
+static ngx_command_t ngx_http_commands[] = {
 
-    { ngx_string("http"),
-      NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
-      ngx_http_block,
-      0,
-      0,
-      NULL },
+        {ngx_string("http"),
+         NGX_MAIN_CONF | NGX_CONF_BLOCK | NGX_CONF_NOARGS,
+         ngx_http_block,
+         0,
+         0,
+         NULL},
 
-      ngx_null_command
+        ngx_null_command
 };
 
 
-static ngx_core_module_t  ngx_http_module_ctx = {
-    ngx_string("http"),
-    NULL,
-    NULL
+// HTTP核心模块上下文
+static ngx_core_module_t ngx_http_module_ctx = {
+        ngx_string("http"),
+        NULL,
+        NULL
 };
 
-
-ngx_module_t  ngx_http_module = {
-    NGX_MODULE_V1,
-    &ngx_http_module_ctx,                  /* module context */
-    ngx_http_commands,                     /* module directives */
-    NGX_CORE_MODULE,                       /* module type */
-    NULL,                                  /* init master */
-    NULL,                                  /* init module */
-    NULL,                                  /* init process */
-    NULL,                                  /* init thread */
-    NULL,                                  /* exit thread */
-    NULL,                                  /* exit process */
-    NULL,                                  /* exit master */
-    NGX_MODULE_V1_PADDING
+// 通过调用ngx_http_block方法，解析{}中的HTTP模块配置
+ngx_module_t ngx_http_module = {
+        NGX_MODULE_V1,
+        &ngx_http_module_ctx,                  /* module context */
+        ngx_http_commands,                     /* module directives */
+        NGX_CORE_MODULE,                       /* module type */
+        NULL,                                  /* init master */
+        NULL,                                  /* init module */
+        NULL,                                  /* init process */
+        NULL,                                  /* init thread */
+        NULL,                                  /* exit thread */
+        NULL,                                  /* exit process */
+        NULL,                                  /* exit master */
+        NGX_MODULE_V1_PADDING
 };
 
 
 // 解析http配置块方法
+// HTTP模块初始化的入口函数
 static char *
-ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
-{
-    char                        *rv;
-    ngx_uint_t                   mi, m, s;
-    ngx_conf_t                   pcf;
-    ngx_http_module_t           *module;
-    ngx_http_conf_ctx_t         *ctx;
-    ngx_http_core_loc_conf_t    *clcf;
-    ngx_http_core_srv_conf_t   **cscfp;
-    ngx_http_core_main_conf_t   *cmcf;
+ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    char *rv;
+    ngx_uint_t mi, m, s;
+    ngx_conf_t pcf;
+    ngx_http_module_t *module;
+    ngx_http_conf_ctx_t *ctx;
+    ngx_http_core_loc_conf_t *clcf;
+    ngx_http_core_srv_conf_t **cscfp;
+    ngx_http_core_main_conf_t *cmcf;
 
     if (*(ngx_http_conf_ctx_t **) conf) {
         return "is duplicate";
     }
 
     /* the main http context */
-
+    // 分配一块内存，存放http配置上下文
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
     if (ctx == NULL) {
         return NGX_CONF_ERROR;
@@ -151,6 +172,13 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     /* the http main_conf context, it is the same in the all http contexts */
 
+    /**
+     * 最外层的HTTP配置
+     * http
+       {
+         include       mime.types;
+         default_type  application/octet-stream;
+     */
     ctx->main_conf = ngx_pcalloc(cf->pool,
                                  sizeof(void *) * ngx_http_max_module);
     if (ctx->main_conf == NULL) {
@@ -163,6 +191,12 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * the server{}s' srv_conf's
      */
 
+//   server{
+//        listen       80;
+//        server_name  blog.s135.com;
+//        index index.html index.htm index.php;
+//        root   /home/wwwroot/;
+//
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->srv_conf == NULL) {
         return NGX_CONF_ERROR;
@@ -173,6 +207,13 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * the http null loc_conf context, it is used to merge
      * the server{}s' loc_conf's
      */
+
+//    location ~ .*\.(php|php5)?$
+//         {
+//            fastcgi_pass  127.0.0.1:9000;
+//            fastcgi_index index.php;
+//            include fcgi.conf;
+//            }
 
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->loc_conf == NULL) {
@@ -219,6 +260,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     pcf = *cf;
     cf->ctx = ctx;
 
+    // preconfiguration 预先初始化配置信息
     for (m = 0; cf->cycle->modules[m]; m++) {
         if (cf->cycle->modules[m]->type != NGX_HTTP_MODULE) {
             continue;
@@ -248,6 +290,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * and its location{}s' loc_conf's
      */
 
+    // 初始化main配置
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
     cscfp = cmcf->servers.elts;
 
@@ -335,13 +378,14 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     /* optimize the lists of ports, addresses and server names */
     // 监听套接字初始化函数ngx_http_optimize_servers
+    // 主要遍历Nginx服务器提供的端口，然后根据每一个IP地址:port这种配置创建一个监听套接字
     if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
     return NGX_CONF_OK;
 
-failed:
+    failed:
 
     *cf = pcf;
 
@@ -350,61 +394,52 @@ failed:
 
 
 static ngx_int_t
-ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
-{
+ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_POST_READ_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_SERVER_REWRITE_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_PREACCESS_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers,
                        cf->pool, 2, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_PRECONTENT_PHASE].handlers,
                        cf->pool, 2, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers,
                        cf->pool, 4, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_LOG_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -413,16 +448,14 @@ ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
 
 static ngx_int_t
-ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
-{
-    ngx_array_t         headers_in;
-    ngx_hash_key_t     *hk;
-    ngx_hash_init_t     hash;
-    ngx_http_header_t  *header;
+ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
+    ngx_array_t headers_in;
+    ngx_hash_key_t *hk;
+    ngx_hash_init_t hash;
+    ngx_http_header_t *header;
 
     if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t))
-        != NGX_OK)
-    {
+        != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -454,14 +487,13 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
 
 static ngx_int_t
-ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
-{
-    ngx_int_t                   j;
-    ngx_uint_t                  i, n;
-    ngx_uint_t                  find_config_index, use_rewrite, use_access;
-    ngx_http_handler_pt        *h;
-    ngx_http_phase_handler_t   *ph;
-    ngx_http_phase_handler_pt   checker;
+ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
+    ngx_int_t j;
+    ngx_uint_t i, n;
+    ngx_uint_t find_config_index, use_rewrite, use_access;
+    ngx_http_handler_pt *h;
+    ngx_http_phase_handler_t *ph;
+    ngx_http_phase_handler_pt checker;
 
     cmcf->phase_engine.server_rewrite_index = (ngx_uint_t) -1;
     cmcf->phase_engine.location_rewrite_index = (ngx_uint_t) -1;
@@ -491,61 +523,61 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
         switch (i) {
 
-        case NGX_HTTP_SERVER_REWRITE_PHASE:
-            if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1) {
-                cmcf->phase_engine.server_rewrite_index = n;
-            }
-            checker = ngx_http_core_rewrite_phase;
+            case NGX_HTTP_SERVER_REWRITE_PHASE:
+                if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1) {
+                    cmcf->phase_engine.server_rewrite_index = n;
+                }
+                checker = ngx_http_core_rewrite_phase;
 
-            break;
+                break;
 
-        case NGX_HTTP_FIND_CONFIG_PHASE:
-            find_config_index = n;
+            case NGX_HTTP_FIND_CONFIG_PHASE:
+                find_config_index = n;
 
-            ph->checker = ngx_http_core_find_config_phase;
-            n++;
-            ph++;
-
-            continue;
-
-        case NGX_HTTP_REWRITE_PHASE:
-            if (cmcf->phase_engine.location_rewrite_index == (ngx_uint_t) -1) {
-                cmcf->phase_engine.location_rewrite_index = n;
-            }
-            checker = ngx_http_core_rewrite_phase;
-
-            break;
-
-        case NGX_HTTP_POST_REWRITE_PHASE:
-            if (use_rewrite) {
-                ph->checker = ngx_http_core_post_rewrite_phase;
-                ph->next = find_config_index;
+                ph->checker = ngx_http_core_find_config_phase;
                 n++;
                 ph++;
-            }
 
-            continue;
+                continue;
 
-        case NGX_HTTP_ACCESS_PHASE:
-            checker = ngx_http_core_access_phase;
-            n++;
-            break;
+            case NGX_HTTP_REWRITE_PHASE:
+                if (cmcf->phase_engine.location_rewrite_index == (ngx_uint_t) -1) {
+                    cmcf->phase_engine.location_rewrite_index = n;
+                }
+                checker = ngx_http_core_rewrite_phase;
 
-        case NGX_HTTP_POST_ACCESS_PHASE:
-            if (use_access) {
-                ph->checker = ngx_http_core_post_access_phase;
-                ph->next = n;
-                ph++;
-            }
+                break;
 
-            continue;
+            case NGX_HTTP_POST_REWRITE_PHASE:
+                if (use_rewrite) {
+                    ph->checker = ngx_http_core_post_rewrite_phase;
+                    ph->next = find_config_index;
+                    n++;
+                    ph++;
+                }
 
-        case NGX_HTTP_CONTENT_PHASE:
-            checker = ngx_http_core_content_phase;
-            break;
+                continue;
 
-        default:
-            checker = ngx_http_core_generic_phase;
+            case NGX_HTTP_ACCESS_PHASE:
+                checker = ngx_http_core_access_phase;
+                n++;
+                break;
+
+            case NGX_HTTP_POST_ACCESS_PHASE:
+                if (use_access) {
+                    ph->checker = ngx_http_core_post_access_phase;
+                    ph->next = n;
+                    ph++;
+                }
+
+                continue;
+
+            case NGX_HTTP_CONTENT_PHASE:
+                checker = ngx_http_core_content_phase;
+                break;
+
+            default:
+                checker = ngx_http_core_generic_phase;
         }
 
         n += cmcf->phases[i].handlers.nelts;
@@ -564,13 +596,12 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
 static char *
 ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
-    ngx_http_module_t *module, ngx_uint_t ctx_index)
-{
-    char                        *rv;
-    ngx_uint_t                   s;
-    ngx_http_conf_ctx_t         *ctx, saved;
-    ngx_http_core_loc_conf_t    *clcf;
-    ngx_http_core_srv_conf_t   **cscfp;
+                       ngx_http_module_t *module, ngx_uint_t ctx_index) {
+    char *rv;
+    ngx_uint_t s;
+    ngx_http_conf_ctx_t *ctx, saved;
+    ngx_http_core_loc_conf_t *clcf;
+    ngx_http_core_srv_conf_t **cscfp;
 
     cscfp = cmcf->servers.elts;
     ctx = (ngx_http_conf_ctx_t *) cf->ctx;
@@ -616,7 +647,7 @@ ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
         }
     }
 
-failed:
+    failed:
 
     *ctx = saved;
 
@@ -626,13 +657,12 @@ failed:
 
 static char *
 ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations,
-    void **loc_conf, ngx_http_module_t *module, ngx_uint_t ctx_index)
-{
-    char                       *rv;
-    ngx_queue_t                *q;
-    ngx_http_conf_ctx_t        *ctx, saved;
-    ngx_http_core_loc_conf_t   *clcf;
-    ngx_http_location_queue_t  *lq;
+                         void **loc_conf, ngx_http_module_t *module, ngx_uint_t ctx_index) {
+    char *rv;
+    ngx_queue_t *q;
+    ngx_http_conf_ctx_t *ctx, saved;
+    ngx_http_core_loc_conf_t *clcf;
+    ngx_http_location_queue_t *lq;
 
     if (locations == NULL) {
         return NGX_CONF_OK;
@@ -643,8 +673,7 @@ ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations,
 
     for (q = ngx_queue_head(locations);
          q != ngx_queue_sentinel(locations);
-         q = ngx_queue_next(q))
-    {
+         q = ngx_queue_next(q)) {
         lq = (ngx_http_location_queue_t *) q;
 
         clcf = lq->exact ? lq->exact : lq->inclusive;
@@ -671,13 +700,12 @@ ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations,
 
 static ngx_int_t
 ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_core_loc_conf_t *pclcf)
-{
-    ngx_uint_t                   n;
-    ngx_queue_t                 *q, *locations, *named, tail;
-    ngx_http_core_loc_conf_t    *clcf;
-    ngx_http_location_queue_t   *lq;
-    ngx_http_core_loc_conf_t   **clcfp;
+                        ngx_http_core_loc_conf_t *pclcf) {
+    ngx_uint_t n;
+    ngx_queue_t *q, *locations, *named, tail;
+    ngx_http_core_loc_conf_t *clcf;
+    ngx_http_location_queue_t *lq;
+    ngx_http_core_loc_conf_t **clcfp;
 #if (NGX_PCRE)
     ngx_uint_t                   r;
     ngx_queue_t                 *regex;
@@ -700,8 +728,7 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
     for (q = ngx_queue_head(locations);
          q != ngx_queue_sentinel(locations);
-         q = ngx_queue_next(q))
-    {
+         q = ngx_queue_next(q)) {
         lq = (ngx_http_location_queue_t *) q;
 
         clcf = lq->exact ? lq->exact : lq->inclusive;
@@ -754,8 +781,7 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
         for (q = named;
              q != ngx_queue_sentinel(locations);
-             q = ngx_queue_next(q))
-        {
+             q = ngx_queue_next(q)) {
             lq = (ngx_http_location_queue_t *) q;
 
             *(clcfp++) = lq->exact;
@@ -800,11 +826,10 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
 static ngx_int_t
 ngx_http_init_static_location_trees(ngx_conf_t *cf,
-    ngx_http_core_loc_conf_t *pclcf)
-{
-    ngx_queue_t                *q, *locations;
-    ngx_http_core_loc_conf_t   *clcf;
-    ngx_http_location_queue_t  *lq;
+                                    ngx_http_core_loc_conf_t *pclcf) {
+    ngx_queue_t *q, *locations;
+    ngx_http_core_loc_conf_t *clcf;
+    ngx_http_location_queue_t *lq;
 
     locations = pclcf->locations;
 
@@ -818,8 +843,7 @@ ngx_http_init_static_location_trees(ngx_conf_t *cf,
 
     for (q = ngx_queue_head(locations);
          q != ngx_queue_sentinel(locations);
-         q = ngx_queue_next(q))
-    {
+         q = ngx_queue_next(q)) {
         lq = (ngx_http_location_queue_t *) q;
 
         clcf = lq->exact ? lq->exact : lq->inclusive;
@@ -846,9 +870,8 @@ ngx_http_init_static_location_trees(ngx_conf_t *cf,
 
 ngx_int_t
 ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations,
-    ngx_http_core_loc_conf_t *clcf)
-{
-    ngx_http_location_queue_t  *lq;
+                      ngx_http_core_loc_conf_t *clcf) {
+    ngx_http_location_queue_t *lq;
 
     if (*locations == NULL) {
         *locations = ngx_palloc(cf->temp_pool,
@@ -866,11 +889,10 @@ ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations,
     }
 
     if (clcf->exact_match
-#if (NGX_PCRE)
+        #if (NGX_PCRE)
         || clcf->regex
-#endif
-        || clcf->named || clcf->noname)
-    {
+        #endif
+        || clcf->named || clcf->noname) {
         lq->exact = clcf;
         lq->inclusive = NULL;
 
@@ -892,11 +914,10 @@ ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations,
 
 
 static ngx_int_t
-ngx_http_cmp_locations(const ngx_queue_t *one, const ngx_queue_t *two)
-{
-    ngx_int_t                   rc;
-    ngx_http_core_loc_conf_t   *first, *second;
-    ngx_http_location_queue_t  *lq1, *lq2;
+ngx_http_cmp_locations(const ngx_queue_t *one, const ngx_queue_t *two) {
+    ngx_int_t rc;
+    ngx_http_core_loc_conf_t *first, *second;
+    ngx_http_location_queue_t *lq1, *lq2;
 
     lq1 = (ngx_http_location_queue_t *) one;
     lq2 = (ngx_http_location_queue_t *) two;
@@ -965,10 +986,9 @@ ngx_http_cmp_locations(const ngx_queue_t *one, const ngx_queue_t *two)
 
 
 static ngx_int_t
-ngx_http_join_exact_locations(ngx_conf_t *cf, ngx_queue_t *locations)
-{
-    ngx_queue_t                *q, *x;
-    ngx_http_location_queue_t  *lq, *lx;
+ngx_http_join_exact_locations(ngx_conf_t *cf, ngx_queue_t *locations) {
+    ngx_queue_t *q, *x;
+    ngx_http_location_queue_t *lq, *lx;
 
     q = ngx_queue_head(locations);
 
@@ -981,8 +1001,7 @@ ngx_http_join_exact_locations(ngx_conf_t *cf, ngx_queue_t *locations)
 
         if (lq->name->len == lx->name->len
             && ngx_filename_cmp(lq->name->data, lx->name->data, lx->name->len)
-               == 0)
-        {
+               == 0) {
             if ((lq->exact && lx->exact) || (lq->inclusive && lx->inclusive)) {
                 ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
                               "duplicate location \"%V\" in %s:%ui",
@@ -1006,12 +1025,11 @@ ngx_http_join_exact_locations(ngx_conf_t *cf, ngx_queue_t *locations)
 
 
 static void
-ngx_http_create_locations_list(ngx_queue_t *locations, ngx_queue_t *q)
-{
-    u_char                     *name;
-    size_t                      len;
-    ngx_queue_t                *x, tail;
-    ngx_http_location_queue_t  *lq, *lx;
+ngx_http_create_locations_list(ngx_queue_t *locations, ngx_queue_t *q) {
+    u_char *name;
+    size_t len;
+    ngx_queue_t *x, tail;
+    ngx_http_location_queue_t *lq, *lx;
 
     if (q == ngx_queue_last(locations)) {
         return;
@@ -1029,13 +1047,11 @@ ngx_http_create_locations_list(ngx_queue_t *locations, ngx_queue_t *q)
 
     for (x = ngx_queue_next(q);
          x != ngx_queue_sentinel(locations);
-         x = ngx_queue_next(x))
-    {
+         x = ngx_queue_next(x)) {
         lx = (ngx_http_location_queue_t *) x;
 
         if (len > lx->name->len
-            || ngx_filename_cmp(name, lx->name->data, len) != 0)
-        {
+            || ngx_filename_cmp(name, lx->name->data, len) != 0) {
             break;
         }
     }
@@ -1071,12 +1087,11 @@ ngx_http_create_locations_list(ngx_queue_t *locations, ngx_queue_t *q)
 
 static ngx_http_location_tree_node_t *
 ngx_http_create_locations_tree(ngx_conf_t *cf, ngx_queue_t *locations,
-    size_t prefix)
-{
-    size_t                          len;
-    ngx_queue_t                    *q, tail;
-    ngx_http_location_queue_t      *lq;
-    ngx_http_location_tree_node_t  *node;
+                               size_t prefix) {
+    size_t len;
+    ngx_queue_t *q, tail;
+    ngx_http_location_queue_t *lq;
+    ngx_http_location_tree_node_t *node;
 
     q = ngx_queue_middle(locations);
 
@@ -1096,7 +1111,7 @@ ngx_http_create_locations_tree(ngx_conf_t *cf, ngx_queue_t *locations,
     node->inclusive = lq->inclusive;
 
     node->auto_redirect = (u_char) ((lq->exact && lq->exact->auto_redirect)
-                           || (lq->inclusive && lq->inclusive->auto_redirect));
+                                    || (lq->inclusive && lq->inclusive->auto_redirect));
 
     node->len = (u_char) len;
     ngx_memcpy(node->name, &lq->name->data[prefix], len);
@@ -1127,7 +1142,7 @@ ngx_http_create_locations_tree(ngx_conf_t *cf, ngx_queue_t *locations,
         return NULL;
     }
 
-inclusive:
+    inclusive:
 
     if (ngx_queue_empty(&lq->list)) {
         return node;
@@ -1144,13 +1159,12 @@ inclusive:
 
 ngx_int_t
 ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_listen_opt_t *lsopt)
-{
-    in_port_t                   p;
-    ngx_uint_t                  i;
-    struct sockaddr            *sa;
-    ngx_http_conf_port_t       *port;
-    ngx_http_core_main_conf_t  *cmcf;
+                    ngx_http_listen_opt_t *lsopt) {
+    in_port_t p;
+    ngx_uint_t i;
+    struct sockaddr *sa;
+    ngx_http_conf_port_t *port;
+    ngx_http_core_main_conf_t *cmcf;
 
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
@@ -1194,10 +1208,9 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
 static ngx_int_t
 ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt)
-{
-    ngx_uint_t             i, default_server, proxy_protocol;
-    ngx_http_conf_addr_t  *addr;
+                       ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt) {
+    ngx_uint_t i, default_server, proxy_protocol;
+    ngx_http_conf_addr_t *addr;
 #if (NGX_HTTP_SSL)
     ngx_uint_t             ssl;
 #endif
@@ -1217,8 +1230,7 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
         if (ngx_cmp_sockaddr(lsopt->sockaddr, lsopt->socklen,
                              addr[i].opt.sockaddr,
                              addr[i].opt.socklen, 0)
-            != NGX_OK)
-        {
+            != NGX_OK) {
             continue;
         }
 
@@ -1292,21 +1304,19 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
 static ngx_int_t
 ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt)
-{
-    ngx_http_conf_addr_t  *addr;
+                     ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt) {
+    ngx_http_conf_addr_t *addr;
 
     if (port->addrs.elts == NULL) {
         if (ngx_array_init(&port->addrs, cf->temp_pool, 4,
                            sizeof(ngx_http_conf_addr_t))
-            != NGX_OK)
-        {
+            != NGX_OK) {
             return NGX_ERROR;
         }
     }
 
 #if (NGX_HTTP_V2 && NGX_HTTP_SSL                                              \
-     && !defined TLSEXT_TYPE_application_layer_protocol_negotiation           \
+ && !defined TLSEXT_TYPE_application_layer_protocol_negotiation           \
      && !defined TLSEXT_TYPE_next_proto_neg)
 
     if (lsopt->http2 && lsopt->ssl) {
@@ -1343,16 +1353,14 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
 static ngx_int_t
 ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_conf_addr_t *addr)
-{
-    ngx_uint_t                  i;
-    ngx_http_core_srv_conf_t  **server;
+                    ngx_http_conf_addr_t *addr) {
+    ngx_uint_t i;
+    ngx_http_core_srv_conf_t **server;
 
     if (addr->servers.elts == NULL) {
         if (ngx_array_init(&addr->servers, cf->temp_pool, 4,
                            sizeof(ngx_http_core_srv_conf_t *))
-            != NGX_OK)
-        {
+            != NGX_OK) {
             return NGX_ERROR;
         }
 
@@ -1379,14 +1387,12 @@ ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 }
 
 
-
 static ngx_int_t
 ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
-    ngx_array_t *ports)
-{
-    ngx_uint_t             p, a;
-    ngx_http_conf_port_t  *port;
-    ngx_http_conf_addr_t  *addr;
+                          ngx_array_t *ports) {
+    ngx_uint_t p, a;
+    ngx_http_conf_port_t *port;
+    ngx_http_conf_addr_t *addr;
 
     if (ports == NULL) {
         return NGX_OK;
@@ -1411,15 +1417,14 @@ ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
 #if (NGX_PCRE)
                 || addr[a].default_server->captures
 #endif
-               )
-            {
+                    ) {
                 if (ngx_http_server_names(cf, cmcf, &addr[a]) != NGX_OK) {
                     return NGX_ERROR;
                 }
             }
         }
 
-         // ngx_http_init_listening：初始化监听套接字
+        // ngx_http_init_listening：初始化监听套接字
         if (ngx_http_init_listening(cf, &port[p]) != NGX_OK) {
             return NGX_ERROR;
         }
@@ -1431,14 +1436,13 @@ ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
 
 static ngx_int_t
 ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
-    ngx_http_conf_addr_t *addr)
-{
-    ngx_int_t                   rc;
-    ngx_uint_t                  n, s;
-    ngx_hash_init_t             hash;
-    ngx_hash_keys_arrays_t      ha;
-    ngx_http_server_name_t     *name;
-    ngx_http_core_srv_conf_t  **cscfp;
+                      ngx_http_conf_addr_t *addr) {
+    ngx_int_t rc;
+    ngx_uint_t n, s;
+    ngx_hash_init_t hash;
+    ngx_hash_keys_arrays_t ha;
+    ngx_http_server_name_t *name;
+    ngx_http_core_srv_conf_t **cscfp;
 #if (NGX_PCRE)
     ngx_uint_t                  regex, i;
 
@@ -1520,8 +1524,7 @@ ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
 
         if (ngx_hash_wildcard_init(&hash, ha.dns_wc_head.elts,
                                    ha.dns_wc_head.nelts)
-            != NGX_OK)
-        {
+            != NGX_OK) {
             goto failed;
         }
 
@@ -1538,8 +1541,7 @@ ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
 
         if (ngx_hash_wildcard_init(&hash, ha.dns_wc_tail.elts,
                                    ha.dns_wc_tail.nelts)
-            != NGX_OK)
-        {
+            != NGX_OK) {
             goto failed;
         }
 
@@ -1577,7 +1579,7 @@ ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
 
     return NGX_OK;
 
-failed:
+    failed:
 
     ngx_destroy_pool(ha.temp_pool);
 
@@ -1586,9 +1588,8 @@ failed:
 
 
 static ngx_int_t
-ngx_http_cmp_conf_addrs(const void *one, const void *two)
-{
-    ngx_http_conf_addr_t  *first, *second;
+ngx_http_cmp_conf_addrs(const void *one, const void *two) {
+    ngx_http_conf_addr_t *first, *second;
 
     first = (ngx_http_conf_addr_t *) one;
     second = (ngx_http_conf_addr_t *) two;
@@ -1620,9 +1621,8 @@ ngx_http_cmp_conf_addrs(const void *one, const void *two)
 
 
 static int ngx_libc_cdecl
-ngx_http_cmp_dns_wildcards(const void *one, const void *two)
-{
-    ngx_hash_key_t  *first, *second;
+ngx_http_cmp_dns_wildcards(const void *one, const void *two) {
+    ngx_hash_key_t *first, *second;
 
     first = (ngx_hash_key_t *) one;
     second = (ngx_hash_key_t *) two;
@@ -1632,12 +1632,11 @@ ngx_http_cmp_dns_wildcards(const void *one, const void *two)
 
 
 static ngx_int_t
-ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
-{
-    ngx_uint_t                 i, last, bind_wildcard;
-    ngx_listening_t           *ls;
-    ngx_http_port_t           *hport;
-    ngx_http_conf_addr_t      *addr;
+ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port) {
+    ngx_uint_t i, last, bind_wildcard;
+    ngx_listening_t *ls;
+    ngx_http_port_t *hport;
+    ngx_http_conf_addr_t *addr;
 
     addr = port->addrs.elts;
     last = port->addrs.nelts;
@@ -1687,17 +1686,17 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
         switch (ls->sockaddr->sa_family) {
 
 #if (NGX_HAVE_INET6)
-        case AF_INET6:
-            if (ngx_http_add_addrs6(cf, hport, addr) != NGX_OK) {
-                return NGX_ERROR;
-            }
-            break;
+            case AF_INET6:
+                if (ngx_http_add_addrs6(cf, hport, addr) != NGX_OK) {
+                    return NGX_ERROR;
+                }
+                break;
 #endif
-        default: /* AF_INET */
-            if (ngx_http_add_addrs(cf, hport, addr) != NGX_OK) {
-                return NGX_ERROR;
-            }
-            break;
+            default: /* AF_INET */
+                if (ngx_http_add_addrs(cf, hport, addr) != NGX_OK) {
+                    return NGX_ERROR;
+                }
+                break;
         }
 
         addr++;
@@ -1709,11 +1708,10 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
 
 
 static ngx_listening_t *
-ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
-{
-    ngx_listening_t           *ls;
-    ngx_http_core_loc_conf_t  *clcf;
-    ngx_http_core_srv_conf_t  *cscf;
+ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr) {
+    ngx_listening_t *ls;
+    ngx_http_core_loc_conf_t *clcf;
+    ngx_http_core_srv_conf_t *cscf;
 
     // 创建一个套接字
     ls = ngx_create_listening(cf, addr->opt.sockaddr, addr->opt.socklen);
@@ -1791,12 +1789,11 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
 
 static ngx_int_t
 ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport,
-    ngx_http_conf_addr_t *addr)
-{
-    ngx_uint_t                 i;
-    ngx_http_in_addr_t        *addrs;
-    struct sockaddr_in        *sin;
-    ngx_http_virtual_names_t  *vn;
+                   ngx_http_conf_addr_t *addr) {
+    ngx_uint_t i;
+    ngx_http_in_addr_t *addrs;
+    struct sockaddr_in *sin;
+    ngx_http_virtual_names_t *vn;
 
     hport->addrs = ngx_pcalloc(cf->pool,
                                hport->naddrs * sizeof(ngx_http_in_addr_t));
@@ -1827,8 +1824,7 @@ ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport,
 #if (NGX_PCRE)
             && addr[i].nregex == 0
 #endif
-            )
-        {
+                ) {
             continue;
         }
 
@@ -1920,14 +1916,13 @@ ngx_http_add_addrs6(ngx_conf_t *cf, ngx_http_port_t *hport,
 
 
 char *
-ngx_http_types_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
-{
-    char  *p = conf;
+ngx_http_types_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    char *p = conf;
 
-    ngx_array_t     **types;
-    ngx_str_t        *value, *default_type;
-    ngx_uint_t        i, n, hash;
-    ngx_hash_key_t   *type;
+    ngx_array_t **types;
+    ngx_str_t *value, *default_type;
+    ngx_uint_t i, n, hash;
+    ngx_hash_key_t *type;
 
     types = (ngx_array_t **) (p + cmd->offset);
 
@@ -1987,7 +1982,7 @@ ngx_http_types_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         type->key_hash = hash;
         type->value = (void *) 4;
 
-    next:
+        next:
 
         continue;
     }
@@ -1998,10 +1993,9 @@ ngx_http_types_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 char *
 ngx_http_merge_types(ngx_conf_t *cf, ngx_array_t **keys, ngx_hash_t *types_hash,
-    ngx_array_t **prev_keys, ngx_hash_t *prev_types_hash,
-    ngx_str_t *default_types)
-{
-    ngx_hash_init_t  hash;
+                     ngx_array_t **prev_keys, ngx_hash_t *prev_types_hash,
+                     ngx_str_t *default_types) {
+    ngx_hash_init_t hash;
 
     if (*keys) {
 
@@ -2029,8 +2023,7 @@ ngx_http_merge_types(ngx_conf_t *cf, ngx_array_t **keys, ngx_hash_t *types_hash,
         if (*prev_keys == NULL) {
 
             if (ngx_http_set_default_types(cf, prev_keys, default_types)
-                != NGX_OK)
-            {
+                != NGX_OK) {
                 return NGX_CONF_ERROR;
             }
 
@@ -2048,8 +2041,7 @@ ngx_http_merge_types(ngx_conf_t *cf, ngx_array_t **keys, ngx_hash_t *types_hash,
         hash.temp_pool = NULL;
 
         if (ngx_hash_init(&hash, (*prev_keys)->elts, (*prev_keys)->nelts)
-            != NGX_OK)
-        {
+            != NGX_OK) {
             return NGX_CONF_ERROR;
         }
     }
@@ -2063,9 +2055,8 @@ ngx_http_merge_types(ngx_conf_t *cf, ngx_array_t **keys, ngx_hash_t *types_hash,
 
 ngx_int_t
 ngx_http_set_default_types(ngx_conf_t *cf, ngx_array_t **types,
-    ngx_str_t *default_type)
-{
-    ngx_hash_key_t  *type;
+                           ngx_str_t *default_type) {
+    ngx_hash_key_t *type;
 
     *types = ngx_array_create(cf->temp_pool, 1, sizeof(ngx_hash_key_t));
     if (*types == NULL) {

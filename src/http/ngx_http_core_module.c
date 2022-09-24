@@ -850,6 +850,8 @@ ngx_http_handler(ngx_http_request_t *r)
 #endif
 
     r->write_event_handler = ngx_http_core_run_phases;
+
+    // 设置write事件回调函数，并且执行ngx_http_core_run_phases回调函数
     ngx_http_core_run_phases(r);
 }
 

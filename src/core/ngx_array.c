@@ -9,16 +9,19 @@
 #include <ngx_core.h>
 
 
+// 创建数组
 ngx_array_t *
 ngx_array_create(ngx_pool_t *p, ngx_uint_t n, size_t size)
 {
     ngx_array_t *a;
 
+    // 分配内存
     a = ngx_palloc(p, sizeof(ngx_array_t));
     if (a == NULL) {
         return NULL;
     }
 
+    // 初始化数组
     if (ngx_array_init(a, p, n, size) != NGX_OK) {
         return NULL;
     }

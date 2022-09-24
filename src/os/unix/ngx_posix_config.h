@@ -142,7 +142,7 @@ typedef struct aiocb  ngx_aiocb_t;
 
 #define NGX_LISTEN_BACKLOG  511
 
-#define ngx_debug_init()
+//#define ngx_debug_init()
 
 
 extern char **environ;

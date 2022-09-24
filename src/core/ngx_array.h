@@ -13,12 +13,24 @@
 #include <ngx_core.h>
 
 
+//数组结构， 数据结构定义
 typedef struct {
+
+    // 指向数组第一个元素指针
     void        *elts;
+
+    // 未使用元素的索引
     ngx_uint_t   nelts;
+
+    // 每个元素的大小
     size_t       size;
+
+    // 分配多少个元素
     ngx_uint_t   nalloc;
+
+    // 内存池
     ngx_pool_t  *pool;
+
 } ngx_array_t;
 
 

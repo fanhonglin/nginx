@@ -81,7 +81,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     pool->log = log;
 
 
-    // 为内存池分片空间
+    // 为内存池分片空间， 分配的大小为ngx_cycle_t的大小
     cycle = ngx_pcalloc(pool, sizeof(ngx_cycle_t));
     if (cycle == NULL) {
         ngx_destroy_pool(pool);
@@ -256,6 +256,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_memzero(&conf, sizeof(ngx_conf_t));
     /* STUB: init array ? */
+
+    // 创建数组
     conf.args = ngx_array_create(pool, 10, sizeof(ngx_str_t));
     if (conf.args == NULL) {
         ngx_destroy_pool(pool);

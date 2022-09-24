@@ -18,6 +18,7 @@ static void *ngx_palloc_large(ngx_pool_t *pool, size_t size);
 ngx_pool_t *
 ngx_create_pool(size_t size, ngx_log_t *log)
 {
+    // 内存池数据结构
     ngx_pool_t  *p;
 
     // 内存对齐操作

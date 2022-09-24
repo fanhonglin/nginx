@@ -221,7 +221,7 @@ main(int argc, char *const *argv) {
     ngx_core_conf_t *ccf;
 
     // 在freebsd和macosx平台下有确切的执行过程，其他情况下定义为空
-    ngx_debug_init();
+//    ngx_debug_init();
 
     // 初始化nginx自定义错误输出列表
     if (ngx_strerror_init() != NGX_OK) {
@@ -936,6 +936,7 @@ ngx_save_argv(ngx_cycle_t *cycle, int argc, char *const *argv) {
     ngx_os_argv = (char **) argv;
     ngx_argc = argc;
 
+    // 分配内存
     ngx_argv = ngx_alloc((argc + 1) * sizeof(char *), cycle->log);
     if (ngx_argv == NULL) {
         return NGX_ERROR;

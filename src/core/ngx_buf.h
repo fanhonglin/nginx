@@ -17,6 +17,7 @@ typedef void *            ngx_buf_tag_t;
 
 typedef struct ngx_buf_s  ngx_buf_t;
 
+// 缓冲区结构 主要用来存储非常大块的内存
 struct ngx_buf_s {
     u_char          *pos;
     u_char          *last;
