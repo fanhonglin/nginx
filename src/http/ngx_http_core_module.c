@@ -890,7 +890,7 @@ ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "generic phase: %ui", r->phase_handler);
-
+    // handler 回调函数
     rc = ph->handler(r);
 
     if (rc == NGX_OK) {

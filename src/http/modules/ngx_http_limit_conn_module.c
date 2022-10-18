@@ -87,7 +87,7 @@ static ngx_conf_num_bounds_t  ngx_http_limit_conn_status_bounds = {
     ngx_conf_check_num_bounds, 400, 599
 };
 
-
+// 语法limit_conn_zone、limit_conn
 static ngx_command_t  ngx_http_limit_conn_commands[] = {
 
     { ngx_string("limit_conn_zone"),
@@ -129,6 +129,7 @@ static ngx_command_t  ngx_http_limit_conn_commands[] = {
 };
 
 
+// 限制连接数模块
 static ngx_http_module_t  ngx_http_limit_conn_module_ctx = {
     ngx_http_limit_conn_add_variables,     /* preconfiguration */
     ngx_http_limit_conn_init,              /* postconfiguration */
@@ -143,7 +144,7 @@ static ngx_http_module_t  ngx_http_limit_conn_module_ctx = {
     ngx_http_limit_conn_merge_conf         /* merge location configuration */
 };
 
-
+// 模块
 ngx_module_t  ngx_http_limit_conn_module = {
     NGX_MODULE_V1,
     &ngx_http_limit_conn_module_ctx,       /* module context */
@@ -739,6 +740,7 @@ ngx_http_limit_conn_add_variables(ngx_conf_t *cf)
 }
 
 
+// 限制请求连接数
 static ngx_int_t
 ngx_http_limit_conn_init(ngx_conf_t *cf)
 {

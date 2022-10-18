@@ -219,24 +219,31 @@
 #define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0
 
 
+// 结构体ngx_module_s主要用于管理每一个模块的详细信息
+// Nginx的所有模块会放置在全局变量cycle的cycle->modules 模块数组。通过这个数组，我们就可以拿到每个模块的具体信息
 struct ngx_module_s {
     ngx_uint_t            ctx_index;
     ngx_uint_t            index;
 
+    // 模块名字
     char                 *name;
 
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
 
+    // 版本
     ngx_uint_t            version;
     const char           *signature;
 
     void                 *ctx;
+
+    // 模块支持的命令集
     ngx_command_t        *commands;
     ngx_uint_t            type;
 
     ngx_int_t           (*init_master)(ngx_log_t *log);
 
+    // 模块初始化的时候调用
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
 
     ngx_int_t           (*init_process)(ngx_cycle_t *cycle);

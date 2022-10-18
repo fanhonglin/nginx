@@ -104,24 +104,40 @@ typedef struct {
 } ngx_http_listen_opt_t;
 
 
+// HTTP模块11个阶段处理
 typedef enum {
+
+    // 读取请求头
     NGX_HTTP_POST_READ_PHASE = 0,
 
+    // 执行rewrite
     NGX_HTTP_SERVER_REWRITE_PHASE,
 
+    // 根据uri替换location
     NGX_HTTP_FIND_CONFIG_PHASE,
+
+    // 根据替换结果继续执行location
     NGX_HTTP_REWRITE_PHASE,
+
+    // 执行rewrite 后置处理
     NGX_HTTP_POST_REWRITE_PHASE,
 
+    // 认证预处理，请求限制、连接限制，
     NGX_HTTP_PREACCESS_PHASE,
 
+    // 认证处理
     NGX_HTTP_ACCESS_PHASE,
+
+    // 认证后处理
     NGX_HTTP_POST_ACCESS_PHASE,
 
+    // 内容预处理
     NGX_HTTP_PRECONTENT_PHASE,
 
+    // 内容处理
     NGX_HTTP_CONTENT_PHASE,
 
+    // 日志处理
     NGX_HTTP_LOG_PHASE
 } ngx_http_phases;
 

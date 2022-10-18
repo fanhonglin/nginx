@@ -375,7 +375,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
 
     found = 0;
 
-    // 解析配置指令，NGX_CONF_MODULE，
+    // 解析配置指令，NGX_CONF_MODULE，nginx_http_module
     for (i = 0; cf->cycle->modules[i]; i++) {
 
         // 获取到指令
@@ -472,7 +472,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                     conf = confp[cf->cycle->modules[i]->ctx_index];
                 }
             }
-
+             // ********************* 初始化cmd 例如 ： ngx_http_block *****************
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {

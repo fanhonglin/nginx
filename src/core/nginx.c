@@ -228,12 +228,12 @@ main(int argc, char *const *argv) {
         return 1;
     }
 
-    // 获取运行nginx命令的参数
+    // 获取运行nginx命令的参数， 主要用于解析命令行中的参数，例如：./nginx -s stop|start|restart
     if (ngx_get_options(argc, argv) != NGX_OK) {
         return 1;
     }
 
-    // ngx_show_version , nginx -v 根据参数显示版本
+    // ngx_show_version , nginx -v 根据参数显示版本， ngx_get_options当中设置ngx_show_version的值
     if (ngx_show_version) {
         ngx_show_version_info();
 
@@ -244,14 +244,14 @@ main(int argc, char *const *argv) {
 
     /* TODO */ ngx_max_sockets = -1;
 
-    // 初始化时间
+    // 初始化时间，调用ngx_time_init方法，初始化并更新时间，如全局变量ngx_cached_time
     ngx_time_init();
 
 #if (NGX_PCRE)
     ngx_regex_init();
 #endif
 
-    // 获取pid
+    // 获取pid，获取当前进程的pid。一般pid会放在/usr/local/nginx-1.4.7/nginx.pid的文件中，用于发送重启，关闭等信号命令。
     ngx_pid = ngx_getpid();
     ngx_parent = ngx_getppid();
 
@@ -281,7 +281,7 @@ main(int argc, char *const *argv) {
     if (init_cycle.pool == NULL) {
         return 1;
     }
-
+    // 保存Nginx命令行中的参数和变量,放到全局变量ngx_argv
     if (ngx_save_argv(&init_cycle, argc, argv) != NGX_OK) {
         return 1;
     }
@@ -291,7 +291,7 @@ main(int argc, char *const *argv) {
         return 1;
     }
 
-    // 获取运行环境中的一些相关参数,如cpu个数
+    // 获取运行环境中的一些相关参数,如cpu个数,如内存页面大小ngx_pagesize,ngx_cacheline_size,最大连接数ngx_max_sockets等
     if (ngx_os_init(log) != NGX_OK) {
         return 1;
     }
@@ -299,7 +299,7 @@ main(int argc, char *const *argv) {
     /*
      * ngx_crc32_table_init() requires ngx_cacheline_size set in ngx_os_init()
      */
-
+    // 初始化一致性hash表，主要作用是加快查询
     if (ngx_crc32_table_init() != NGX_OK) {
         return 1;
     }

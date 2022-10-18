@@ -335,7 +335,11 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
         }
     }
 
-
+    // 初始化阶段数组 只有这里面的6个阶段可以挂载模块
+    //  初始化阶段处理数组
+    //  每一个可以挂载模块的阶段，都定义了一个cmcf->phases[?].handlers的数组
+    //  每个阶段被调用的时候，都会去遍历改阶段处理数组下需要处理的逻辑函数
+    // Nginx的PHASE阶段处理共包含11部分，通过这11个阶段的处理，就能完整的处理一个HTTP请求
     if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -370,7 +374,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
 
     *cf = pcf;
 
-
+    // ******************** 11个阶段的 初始化阶段处理 *******************
     if (ngx_http_init_phase_handlers(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -395,18 +399,24 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
 
 static ngx_int_t
 ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
+
+    // 对应函数：ngx_http_core_generic_phase ,
+    // 读取请求内容阶段，这个阶段没有默认的handler，主要用来读取请求体，并对请求体做相应的处理
+    // ngx_http_realip_module，后端以此获取客户端原始ip, 该模块默认不开启，需要通过 --with-http_realip_module启动
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_POST_READ_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
         != NGX_OK) {
         return NGX_ERROR;
     }
 
+    // server 当中配置了rewrite， 重写url
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_SERVER_REWRITE_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
         != NGX_OK) {
         return NGX_ERROR;
     }
 
+    // location当中配置的rewrete,重写url
     if (ngx_array_init(&cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers,
                        cf->pool, 1, sizeof(ngx_http_handler_pt))
         != NGX_OK) {
@@ -523,6 +533,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
 
         switch (i) {
 
+            //  // Server请求地址重写阶段，这个阶段主要是处理全局的(server block)的rewrite规则
             case NGX_HTTP_SERVER_REWRITE_PHASE:
                 if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1) {
                     cmcf->phase_engine.server_rewrite_index = n;
@@ -531,6 +542,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
 
                 break;
 
+                // 配置查找阶段，不支持ch，这个阶段主要是通过uri来查找对应的location。
+                // 然后将uri和location的数据关联起来。这个阶段主要处理逻辑在checker函数中，不能挂载自定义的handler
             case NGX_HTTP_FIND_CONFIG_PHASE:
                 find_config_index = n;
 
@@ -540,14 +553,19 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
 
                 continue;
 
+                // 	Location请求地址重写阶段，这个主要处理location block的rewrite。
             case NGX_HTTP_REWRITE_PHASE:
                 if (cmcf->phase_engine.location_rewrite_index == (ngx_uint_t) -1) {
                     cmcf->phase_engine.location_rewrite_index = n;
                 }
+
+
                 checker = ngx_http_core_rewrite_phase;
 
                 break;
 
+                // 请求地址重写提交阶段，post rewrite
+                // ，这个主要是进行一些校验以及收尾工作，以便于交给后面的模块。这个phase不能挂载自定义handler
             case NGX_HTTP_POST_REWRITE_PHASE:
                 if (use_rewrite) {
                     ph->checker = ngx_http_core_post_rewrite_phase;
@@ -558,11 +576,14 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
 
                 continue;
 
+                // 访问权限检查准备阶段，比如流控这种类型的access就放在这个phase，也就是说它主要是进行一些比较粗粒度的access。
             case NGX_HTTP_ACCESS_PHASE:
                 checker = ngx_http_core_access_phase;
                 n++;
                 break;
 
+                // 访问权限检查提交阶段，一般来说当上面的access模块得到access_code之后就会由这个模块根据access_code来进行操作
+                // 这个phase不能挂载自定义handler
             case NGX_HTTP_POST_ACCESS_PHASE:
                 if (use_access) {
                     ph->checker = ngx_http_core_post_access_phase;
@@ -572,11 +593,13 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf) {
 
                 continue;
 
+                // 内容产生阶段，内容处理模块，产生文件内容，如果是PHP，去调用phpcgi，如果是代理，就转发给相应的后端服务器
             case NGX_HTTP_CONTENT_PHASE:
                 checker = ngx_http_core_content_phase;
                 break;
 
             default:
+                // 剩余执行下面的默认方法
                 checker = ngx_http_core_generic_phase;
         }
 

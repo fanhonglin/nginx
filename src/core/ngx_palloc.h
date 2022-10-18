@@ -72,7 +72,7 @@ typedef struct {
 // Nginx 内存池数据结构
 struct ngx_pool_s {
 
-//    数据库的结构
+//    数据的结构
     ngx_pool_data_t       d;
 
     // 最大每次分配内存

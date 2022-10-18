@@ -78,6 +78,7 @@ ngx_atomic_t         *ngx_stat_waiting = &ngx_stat_waiting0;
 
 
 
+// event事件模块， ngx_events_block 解析events块block中的内容
 static ngx_command_t  ngx_events_commands[] = {
 
     { ngx_string("events"),
@@ -178,10 +179,16 @@ static ngx_event_module_t  ngx_event_core_module_ctx = {
 ngx_module_t  ngx_event_core_module = {
     NGX_MODULE_V1,
     &ngx_event_core_module_ctx,            /* module context */
+
+    // commands
     ngx_event_core_commands,               /* module directives */
     NGX_EVENT_MODULE,                      /* module type */
     NULL,                                  /* init master */
+
+    // 模块初始化
     ngx_event_module_init,                 /* init module */
+
+    // process初始化
     ngx_event_process_init,                /* init process */
     NULL,                                  /* init thread */
     NULL,                                  /* exit thread */
@@ -190,7 +197,7 @@ ngx_module_t  ngx_event_core_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+// Nginx的事件都是由nginx_event.c文件中的ngx_process_events_and_timers进程事件分发器这个函数开始的。
 void
 ngx_process_events_and_timers(ngx_cycle_t *cycle)
 {
@@ -218,18 +225,32 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
 
     // 惊群
+//    * ngx_use_accept_mutex变量代表是否使用accept互斥体
+//    * 默认是使用，可以通过accept_mutex off;指令关闭；
+//    * accept mutex 的作用就是避免惊群，同时实现负载均衡
     if (ngx_use_accept_mutex) {
+
+//        * 	ngx_accept_disabled = ngx_cycle->connection_n / 8 - ngx_cycle->free_connection_n;
+//        * 	当connection达到连接总数的7/8的时候，就不再处理新的连接accept事件，只处理当前连接的read事件
+//        * 	这个是比较简单的一种负载均衡方法
+
         if (ngx_accept_disabled > 0) {
             ngx_accept_disabled--;
 
         } else {
 
-            // 获取锁
+            // 获取锁， 争抢文件锁，拿到文件锁的，才可以处理accept事件，获取失败，那么直接返回
             if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {
                 return;
             }
 
+            // 拿到锁
             if (ngx_accept_mutex_held) {
+
+                // * 给flags增加标记NGX_POST_EVENTS，这个标记作为处理时间核心函数ngx_process_events的一个参数，这个函数中所有事件将延后处理。
+                // * accept事件都放到ngx_posted_accept_events链表中，
+                // * epollin|epollout普通事件都放到ngx_posted_events链表中
+
                 flags |= NGX_POST_EVENTS;
 
             } else {
@@ -256,8 +277,11 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "timer delta: %M", delta);
 
+    //  * 1. ngx_posted_accept_events是一个事件队列，暂存epoll从监听套接口wait到的accept事件
+    //	 * 2. 这个方法是循环处理accpet事件列队上的accpet事件
     ngx_event_process_posted(cycle, &ngx_posted_accept_events);
 
+//    * 如果拿到锁，处理完accept事件后，则释放锁
     if (ngx_accept_mutex_held) {
         ngx_shmtx_unlock(&ngx_accept_mutex);
     }
@@ -266,6 +290,8 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
         ngx_event_expire_timers();
     }
 
+//    *1. 普通事件都会存放在ngx_posted_events队列上
+//    *2. 这个方法是循环处理read事件列队上的read事件
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 
@@ -469,7 +495,7 @@ ngx_event_init_conf(ngx_cycle_t *cycle, void *conf)
     return NGX_CONF_OK;
 }
 
-
+// 初始化event模块
 static ngx_int_t
 ngx_event_module_init(ngx_cycle_t *cycle)
 {
@@ -951,7 +977,7 @@ ngx_send_lowat(ngx_connection_t *c, size_t lowat)
 }
 
 
-// 解析events配置块
+// 解析events配置块, event时间模型，
 static char *
 ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1011,6 +1037,8 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     for (i = 0; cf->cycle->modules[i]; i++) {
+
+        // event模块
         if (cf->cycle->modules[i]->type != NGX_EVENT_MODULE) {
             continue;
         }

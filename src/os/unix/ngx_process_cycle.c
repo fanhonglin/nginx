@@ -305,11 +305,11 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
         }
     }
 
-    // 自循环
+    // 自循环 ********************循环接收请求*******************************
     for ( ;; ) {
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
 
-        // 时间定时
+        // 进程事件分发器，事件分发；惊群处理；简单的负载均衡。
         ngx_process_events_and_timers(cycle);
 
         if (ngx_terminate || ngx_quit) {

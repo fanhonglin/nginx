@@ -27,6 +27,8 @@ ngx_preinit_modules(void)
 {
     ngx_uint_t  i;
 
+    // 模块数组，所有的模块都会保存在此数组中   共有四种类型模块："CORE","CONF","EVNT","HTTP"
+    // 新增模块或者减少模块可以在configure命令执行前 auto/modules文件里面修改。
     for (i = 0; ngx_modules[i]; i++) {
         ngx_modules[i]->index = i;
         ngx_modules[i]->name = ngx_module_names[i];
