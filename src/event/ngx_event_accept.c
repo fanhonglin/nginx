@@ -59,6 +59,8 @@ ngx_event_accept(ngx_event_t *ev)
         if (use_accept4) {
             s = accept4(lc->fd, &sa.sockaddr, &socklen, SOCK_NONBLOCK);
         } else {
+
+            // 建立socket TCP连接
             s = accept(lc->fd, &sa.sockaddr, &socklen);
         }
 #else
@@ -133,9 +135,11 @@ ngx_event_accept(ngx_event_t *ev)
         (void) ngx_atomic_fetch_add(ngx_stat_accepted, 1);
 #endif
 
+        // ngx_accept_disabled
         ngx_accept_disabled = ngx_cycle->connection_n / 8
                               - ngx_cycle->free_connection_n;
 
+        // 连接池当中获取 ngx_connection_t
         c = ngx_get_connection(s, ev->log);
 
         if (c == NULL) {
@@ -153,6 +157,7 @@ ngx_event_accept(ngx_event_t *ev)
         (void) ngx_atomic_fetch_add(ngx_stat_active, 1);
 #endif
 
+        // 创建内存池
         c->pool = ngx_create_pool(ls->pool_size, ev->log);
         if (c->pool == NULL) {
             ngx_close_accepted_connection(c);
@@ -295,6 +300,7 @@ ngx_event_accept(ngx_event_t *ev)
         }
 #endif
 
+        // 将这个新连接的读事件添加到epoll当中
         if (ngx_add_conn && (ngx_event_flags & NGX_USE_EPOLL_EVENT) == 0) {
             if (ngx_add_conn(c) == NGX_ERROR) {
                 ngx_close_accepted_connection(c);
@@ -319,7 +325,7 @@ ngx_int_t
 ngx_trylock_accept_mutex(ngx_cycle_t *cycle)
 {
 
-    // 尝试获取共享锁
+    // 尝试获取共享锁  share mutex
     if (ngx_shmtx_trylock(&ngx_accept_mutex)) {
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
@@ -329,6 +335,7 @@ ngx_trylock_accept_mutex(ngx_cycle_t *cycle)
             return NGX_OK;
         }
 
+        // 监听连接的读事件添加到当前的epoll等事件驱动模块当中
         if (ngx_enable_accept_events(cycle) == NGX_ERROR) {
             ngx_shmtx_unlock(&ngx_accept_mutex);
             return NGX_ERROR;
@@ -371,6 +378,7 @@ ngx_enable_accept_events(ngx_cycle_t *cycle)
             continue;
         }
 
+        // 添加到epoll当中
         if (ngx_add_event(c->read, NGX_READ_EVENT, 0) == NGX_ERROR) {
             return NGX_ERROR;
         }

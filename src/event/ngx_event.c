@@ -99,9 +99,14 @@ static ngx_core_module_t  ngx_events_module_ctx = {
 };
 
 
+// ngx_events_module
 ngx_module_t  ngx_events_module = {
     NGX_MODULE_V1,
+
+    // ngx_events_module_ctx
     &ngx_events_module_ctx,                /* module context */
+
+    // ngx_events_commands
     ngx_events_commands,                   /* module directives */
     NGX_CORE_MODULE,                       /* module type */
     NULL,                                  /* init master */
@@ -118,7 +123,7 @@ ngx_module_t  ngx_events_module = {
 static ngx_str_t  event_core_name = ngx_string("event_core");
 
 
-// command
+// command , events当中的配置项目
 static ngx_command_t  ngx_event_core_commands[] = {
 
     { ngx_string("worker_connections"),
@@ -185,7 +190,7 @@ ngx_module_t  ngx_event_core_module = {
     NGX_EVENT_MODULE,                      /* module type */
     NULL,                                  /* init master */
 
-    // 模块初始化
+    // 模块初始化，
     ngx_event_module_init,                 /* init module */
 
     // process初始化
@@ -204,6 +209,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     ngx_uint_t  flags;
     ngx_msec_t  timer, delta;
 
+    // ngx_timer_resolution
     if (ngx_timer_resolution) {
         timer = NGX_TIMER_INFINITE;
         flags = 0;
@@ -223,17 +229,18 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 #endif
     }
 
-
     // 惊群
-//    * ngx_use_accept_mutex变量代表是否使用accept互斥体
-//    * 默认是使用，可以通过accept_mutex off;指令关闭；
-//    * accept mutex 的作用就是避免惊群，同时实现负载均衡
+    //    * ngx_use_accept_mutex变量代表是否使用accept互斥体
+    //    * 默认是使用，可以通过accept_mutex off;指令关闭；
+    //    * accept mutex 的作用就是避免惊群，同时实现负载均衡
+    // 检查accept_mutex锁是否开启
     if (ngx_use_accept_mutex) {
 
 //        * 	ngx_accept_disabled = ngx_cycle->connection_n / 8 - ngx_cycle->free_connection_n;
 //        * 	当connection达到连接总数的7/8的时候，就不再处理新的连接accept事件，只处理当前连接的read事件
 //        * 	这个是比较简单的一种负载均衡方法
 
+       // ngx_accept_disabled >0 就减一
         if (ngx_accept_disabled > 0) {
             ngx_accept_disabled--;
 
@@ -244,7 +251,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
                 return;
             }
 
-            // 拿到锁
+            // 拿到锁， 事件放到延迟队列当中
             if (ngx_accept_mutex_held) {
 
                 // * 给flags增加标记NGX_POST_EVENTS，这个标记作为处理时间核心函数ngx_process_events的一个参数，这个函数中所有事件将延后处理。
@@ -268,8 +275,11 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
         timer = 0;
     }
 
+    // 计算delta
     delta = ngx_current_msec;
 
+    // epoll process_events 当中会执行 epoll_wait方法，阻塞执行，直到epoll_wait返回了事件，就会继续执行
+    // ngx_epoll_process_events
     (void) ngx_process_events(cycle, timer, flags);
 
     delta = ngx_current_msec - delta;
@@ -639,7 +649,7 @@ ngx_timer_signal_handler(int signo)
 
 #endif
 
-
+// init_process
 static ngx_int_t
 ngx_event_process_init(ngx_cycle_t *cycle)
 {
@@ -678,6 +688,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ngx_queue_init(&ngx_posted_next_events);
     ngx_queue_init(&ngx_posted_events);
 
+    // 初始化红黑树的定时器
     if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
         return NGX_ERROR;
     }
@@ -693,6 +704,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
         module = cycle->modules[m]->ctx;
 
+        // 事件驱动的init方法
         if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK) {
             /* fatal */
             exit(2);
@@ -895,6 +907,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #else
 
+        // 重点，设置监听器端口上读事件的处理方法为：ngx_event_accept
         rev->handler = (c->type == SOCK_STREAM) ? ngx_event_accept
                                                 : ngx_event_recvmsg;
 
@@ -930,6 +943,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #endif
 
+        // 将监听连接的读事件添加到事件驱动模块
         if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
             return NGX_ERROR;
         }
@@ -985,6 +999,8 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     void               ***ctx;
     ngx_uint_t            i;
     ngx_conf_t            pcf;
+
+    // 事件模块
     ngx_event_module_t   *m;
 
     if (*(void **) conf) {

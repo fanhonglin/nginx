@@ -21,6 +21,7 @@ ngx_event_process_posted(ngx_cycle_t *cycle, ngx_queue_t *posted)
     ngx_queue_t  *q;
     ngx_event_t  *ev;
 
+    // 处理事件
     while (!ngx_queue_empty(posted)) {
 
         q = ngx_queue_head(posted);
@@ -31,6 +32,7 @@ ngx_event_process_posted(ngx_cycle_t *cycle, ngx_queue_t *posted)
 
         ngx_delete_posted_event(ev);
 
+        // ngx_event_accept、ngx_http_wait_request_handler
         ev->handler(ev);
     }
 }

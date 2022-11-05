@@ -156,6 +156,7 @@ ngx_uint_t                  ngx_use_epoll_rdhup;
 
 static ngx_str_t      epoll_name = ngx_string("epoll");
 
+// epoll_events
 static ngx_command_t  ngx_epoll_commands[] = {
 
     { ngx_string("epoll_events"),
@@ -176,13 +177,23 @@ static ngx_command_t  ngx_epoll_commands[] = {
 };
 
 
+// ngx epoll 模块
 static ngx_event_module_t  ngx_epoll_module_ctx = {
     &epoll_name,
+
+    // 创建配置
     ngx_epoll_create_conf,               /* create configuration */
+
+    // 解析配置项
     ngx_epoll_init_conf,                 /* init configuration */
 
+    //
     {
+
+        // 添加事件， epoll_ctl
         ngx_epoll_add_event,             /* add an event */
+
+        // 删除事件 epoll_ctl
         ngx_epoll_del_event,             /* delete an event */
         ngx_epoll_add_event,             /* enable an event */
         ngx_epoll_del_event,             /* disable an event */
@@ -193,7 +204,11 @@ static ngx_event_module_t  ngx_epoll_module_ctx = {
 #else
         NULL,                            /* trigger a notify */
 #endif
+
+           // 收集、分发事件 epoll_wait
         ngx_epoll_process_events,        /* process the events */
+
+        // nginx 启动过程中，epoll_create 初始化事件, 创建epoll
         ngx_epoll_init,                  /* init the events */
         ngx_epoll_done,                  /* done the events */
     }
@@ -327,6 +342,8 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     epcf = ngx_event_get_conf(cycle->conf_ctx, ngx_epoll_module);
 
     if (ep == -1) {
+
+        // 创建epoll
         ep = epoll_create(cycle->connection_n / 2);
 
         if (ep == -1) {
@@ -355,6 +372,7 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
             ngx_free(event_list);
         }
 
+        // 初始化event_list
         event_list = ngx_alloc(sizeof(struct epoll_event) * epcf->events,
                                cycle->log);
         if (event_list == NULL) {
@@ -362,6 +380,7 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
         }
     }
 
+    // epoll_events 的nevents
     nevents = epcf->events;
 
     ngx_io = ngx_os_io;
@@ -369,8 +388,11 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     ngx_event_actions = ngx_epoll_module_ctx.actions;
 
 #if (NGX_HAVE_CLEAR_EVENT)
+
+    // ET模式
     ngx_event_flags = NGX_USE_CLEAR_EVENT
 #else
+        // 水平
     ngx_event_flags = NGX_USE_LEVEL_EVENT
 #endif
                       |NGX_USE_GREEDY_EVENT
@@ -624,6 +646,7 @@ ngx_epoll_add_event(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags)
                    "epoll add event: fd:%d op:%d ev:%08XD",
                    c->fd, op, ee.events);
 
+    // 添加事件 epoll_ctl
     if (epoll_ctl(ep, op, c->fd, &ee) == -1) {
         ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_errno,
                       "epoll_ctl(%d, %d) failed", op, c->fd);
@@ -685,6 +708,7 @@ ngx_epoll_del_event(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags)
                    "epoll del event: fd:%d op:%d ev:%08XD",
                    c->fd, op, ee.events);
 
+    // 删除事件 epoll_ctl
     if (epoll_ctl(ep, op, c->fd, &ee) == -1) {
         ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_errno,
                       "epoll_ctl(%d, %d) failed", op, c->fd);
@@ -797,6 +821,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "epoll timer: %M", timer);
 
+    // 获取事件，如果没有事件，就会阻塞在当前位置
     events = epoll_wait(ep, event_list, (int) nevents, timer);
 
     err = (events == -1) ? ngx_errno : 0;
@@ -833,12 +858,14 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         return NGX_ERROR;
     }
 
+    // 遍历返回的所有的事件
     for (i = 0; i < events; i++) {
         c = event_list[i].data.ptr;
 
         instance = (uintptr_t) c & 1;
         c = (ngx_connection_t *) ((uintptr_t) c & (uintptr_t) ~1);
 
+        // 取出读事件
         rev = c->read;
 
         if (c->fd == -1 || rev->instance != instance) {
@@ -880,6 +907,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         }
 #endif
 
+        // 如果读事件，并且是活跃的事件
         if ((revents & EPOLLIN) && rev->active) {
 
 #if (NGX_HAVE_EPOLLRDHUP)
@@ -891,19 +919,25 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
             rev->ready = 1;
             rev->available = -1;
 
+            // 如果
             if (flags & NGX_POST_EVENTS) {
+                // 延迟队列，事件放到延迟队列当中
                 queue = rev->accept ? &ngx_posted_accept_events
                                     : &ngx_posted_events;
 
                 ngx_post_event(rev, queue);
 
             } else {
+
+                // 立即调用读事件的回调方法来处理这个事件
                 rev->handler(rev);
             }
         }
 
+        // 取出写事件
         wev = c->write;
 
+        // 写事件，并且活跃
         if ((revents & EPOLLOUT) && wev->active) {
 
             if (c->fd == -1 || wev->instance != instance) {
@@ -924,9 +958,13 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 #endif
 
             if (flags & NGX_POST_EVENTS) {
+
+                // 放到队列当中
                 ngx_post_event(wev, &ngx_posted_events);
 
             } else {
+
+                // 立即执行
                 wev->handler(wev);
             }
         }

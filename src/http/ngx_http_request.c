@@ -203,6 +203,7 @@ ngx_http_header_t  ngx_http_headers_in[] = {
 };
 
 
+// 初始化连接
 void
 ngx_http_init_connection(ngx_connection_t *c)
 {
@@ -326,6 +327,8 @@ ngx_http_init_connection(ngx_connection_t *c)
     // 当read事件进来的时候，就会调用ngx_http_wait_request_handler。
     // ngx_http_wait_request_handler方法也是http模块数据处理的入口
     rev->handler = ngx_http_wait_request_handler;
+
+    // 写事件
     c->write->handler = ngx_http_empty_handler;
 
 #if (NGX_HTTP_V2)
@@ -1070,6 +1073,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0,
                    "http process request line");
 
+    // 读事件是否超时
     if (rev->timedout) {
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
         c->timedout = 1;
@@ -1091,6 +1095,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
             }
         }
 
+        //  // GET /uri HTTP/1.1
         //则对HTTP请求行进行 parse解析
         rc = ngx_http_parse_request_line(r, r->header_in);
 
@@ -1171,7 +1176,8 @@ ngx_http_process_request_line(ngx_event_t *rev)
 
             c->log->action = "reading client request headers";
 
-            //         /* 请求行解析成功后，将read事件的回调函数设置为：ngx_http_process_request_headers
+
+            //         /* 请求行解析成功后，将read事件的回调函数设置为：ngx_http_process_request_headers， 准备接收http头部
             //             * ngx_http_process_request_headers：用于处理http的header数据*/
             rev->handler = ngx_http_process_request_headers;
 
@@ -1376,6 +1382,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
     rc = NGX_AGAIN;
 
+    // 循环解析header
     for ( ;; ) {
 
         if (rc == NGX_AGAIN) {
@@ -1534,6 +1541,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
         break;
     }
 
+    // 执行post请求
     ngx_http_run_posted_requests(c);
 }
 
@@ -2089,6 +2097,7 @@ ngx_http_process_request(ngx_http_request_t *r)
     r->stat_writing = 1;
 #endif
 
+    // 当再次有读事件到来，将会调用
     c->read->handler = ngx_http_request_handler;
     c->write->handler = ngx_http_request_handler;
     r->read_event_handler = ngx_http_block_reading;

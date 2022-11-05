@@ -1746,6 +1746,7 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr) {
 
     // 侦听套接字 的回调函数。该回调函数在ngx_event_accept函数中回调；
     //  回调之后，会将读取事件回调函数rev->handler()修改成方法：ngx_http_wait_request_handler*/
+    // 一旦有请求来，就会回调这个方法
     ls->handler = ngx_http_init_connection;
 
     cscf = addr->default_server;

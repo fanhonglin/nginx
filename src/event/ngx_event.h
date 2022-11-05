@@ -27,6 +27,7 @@ typedef struct {
 #endif
 
 
+// 事件的结构体
 struct ngx_event_s {
     void            *data;
 
@@ -100,6 +101,7 @@ struct ngx_event_s {
 
     int              available;
 
+    // 发生事件时候处理的方法
     ngx_event_handler_pt  handler;
 
 
@@ -167,8 +169,13 @@ struct ngx_event_aio_s {
 #endif
 
 
+// 不直接调用里面的方法
 typedef struct {
+
+    // 添加事件
     ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+
+    // 删除事件
     ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
 
     ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
@@ -179,6 +186,7 @@ typedef struct {
 
     ngx_int_t  (*notify)(ngx_event_handler_pt handler);
 
+    // 事件处理
     ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer,
                                  ngx_uint_t flags);
 
@@ -447,12 +455,17 @@ typedef struct {
 } ngx_event_conf_t;
 
 
+// 事件结构体
 typedef struct {
+
+    // 名称
     ngx_str_t              *name;
+
 
     void                 *(*create_conf)(ngx_cycle_t *cycle);
     char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
 
+    // 每个事件模块需要实现的10个抽象方法
     ngx_event_actions_t     actions;
 } ngx_event_module_t;
 
